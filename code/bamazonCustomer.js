@@ -13,6 +13,13 @@ var connection = mysql.createConnection({
     password: '',
 
     database: 'Bamazon'
-});
+})
+
+connection.connect(function(err){
+    if(err){
+        throw err;
+    }
+    console.log('Connected as id: ' + connection.threadId);
+})
 
 
