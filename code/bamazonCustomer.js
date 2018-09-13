@@ -14,12 +14,13 @@ var connection = mysql.createConnection({
 
     database: 'bamazon'
 })
-
+1
 connection.connect(function(err){
     if(err){
         throw err;
     }
     console.log('Connected as id: ' + connection.threadId);
+
 })
 
 function startGame(){
@@ -28,28 +29,33 @@ function startGame(){
         console.log("-_-_-_-_-_-_-_-_-_-_ Welcome To Bamazon -_-_-_-_-_-_-_-_-_-_")
         console.log("_________________________________________________________________________________________________________")
 
+
+        // display the products table
+
         for (var i = 0; i < res.length; i++){
             console.log("ID: " + res[i].item_id + " || " + "Product: " + res[i].product_name + " || " + "Department: " + res[i].department_name + " || " + "Price:" + res[i].price + " || " + "Quantity: " +  res[i].stock_quantity);
             console.log("_________________________________________________________________________________________________________");
         }
-
+        
+        // ask the user what he wants to purhcase and how many units.
         console.log(" ");
         inquirer.prompt([
             {
+                name: "item_id",
                 type: "input",
-                name: "id",
-                message: "What is the ID of the product you would like to purchase today?",
-                validate: function(value){
+                message: "What item ID would you like to purchase today?",
+                validate: (value) => {
                     if(isNaN(value) == false && parseInt(value) <= res.length && parseInt(value) > 0){
                         return true;
                       } else{
                         return false;
-                      }
+                    }
                 }
+                  
             },
             {
-                type: "input",
                 name: "qty",
+                type: "input",
                 message: "How many units would you like to purchase today?",
                 validate: function(value){
                     if(isNaN(value)){
@@ -60,45 +66,42 @@ function startGame(){
                 }
             }
         ]).then(function(ans){
-            const itemPurchase = (ans.id) -1;
-            const qtyPurchase = parseInt(ans.qty);
-            const grandTotal = parseFloat(((res[itemPurchase].price)* qtyPurchase).toFixed(2));
+            let itemPurchase = (ans.item_id)-1;
+            let qtyPurchase = parseInt(ans.qty);
+            let total = parseFloat(((res[itemPurchase].price)*qtyPurchase).toFixed(2));
+
+            // if stock qty is more or equal of hows much user wants to buy  - update db
+            if(res[itemPurchase].tock_quantity >= qtyPurchase){
+                connection.query("UPDATE products SET ? WHERE ?",[{stock_quantity: (res[itemPurchase].stock_quantity - qtyPurchase)},{item_id: ans.item_id}],
+                function(err,result){
+                    if(err) throw err;
+                    console.log("Thank you for your purchase. \nYour total amount is: $" + total.toFixed(2) + "\nYour item(s) will be shipped to you within 2 business days.");
+                });
+            } else {
+                console.log("Sorry, not enough units in stock.");
+            }
+
+            reprompt();
         })
 
-        // checking if quantity is sufficient
-        if(res[itemPurchase].stock_quantity >= qtyPurchase){
-            // after purchase is complete - update table products
-            connection.query("UPDATE products SET ? WHERE ?", [
-                {stock_quantity: (res[itemPurchase].stock_quantity - qtyPurchase)},
-                {item_id: ans.id}
-            ], function(err, result){
-                if(err) throw err;
-                console.log("Your total is $" + grandTotal.toFixed(2) + ". Your item(s) will arrive withing 3 business days.");
-                console.log('Thank you for shopping with us!');
-                console.log("\n---------------------------------------------------------------------\n");
-            
-            });
-        } else {
-            console.log('Sorry, there is not enough product in stock.');
-			console.log('Please modify your order.');
-			console.log("\n---------------------------------------------------------------------\n");
-        }
-        promptAgain();
-    })
-}
-function promptAgain(){
+   
+    });
+};
+
+function reprompt(){
     inquirer.prompt([{
         type: "confirm",
         name: "reply",
-        message: "Would you like to purchase something else?"
+        message: "Would you like to purchase another item?"
     }]).then(function(ans){
         if(ans.reply){
             startGame();
-        }else {
-            console.log("See you soon!");
+        }else{
+            console.log("Thank you, come back again!");
         }
     });
 }
+
 startGame();
-
-
+        
+        
