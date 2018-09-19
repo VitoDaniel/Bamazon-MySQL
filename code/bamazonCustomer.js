@@ -71,7 +71,7 @@ function startGame(){
             let total = parseFloat(((res[itemPurchase].price)*qtyPurchase).toFixed(2));
 
             // if stock qty is more or equal of hows much user wants to buy  - update db
-            if(res[itemPurchase].tock_quantity >= qtyPurchase){
+            if(res[itemPurchase].stock_quantity >= qtyPurchase){
                 connection.query("UPDATE products SET ? WHERE ?",[{stock_quantity: (res[itemPurchase].stock_quantity - qtyPurchase)},{item_id: ans.item_id}],
                 function(err,result){
                     if(err) throw err;
