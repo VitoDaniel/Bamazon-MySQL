@@ -10,7 +10,7 @@
 * cd Bamazon
 * node server.js
 
-# Tech UsedL:
+# Technologies  Used:
 * Node.js
 * Express
 * MySQL
